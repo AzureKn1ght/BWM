@@ -184,34 +184,22 @@ const claim = async (wallet, tries = 1.0) => {
   try {
     // connection using the current wallet
     const connection = await connect(wallet);
-    const nonce = await connection.provider.getTransactionCount(wallet.address);
 
-    // set custom gasPrice
-    const overrideOptions = {
-      nonce: nonce,
-      gasLimit: 9999999,
-      gasPrice: ethers.utils.parseUnits(tries.toString(), "gwei"),
-    };
-    const m = Math.floor((120 * 60000) / tries);
-
-    // call the claimToFurpool function and await the results
-    const result = await connection.contract.claimToFurpool(1, overrideOptions);
-    const receipt = await connection.provider.waitForTransaction(
-      result.hash,
-      1,
-      m
-    );
+    // call the claim function and await the results
+    const result = await connection.contract.matrixRedeem();
+    const receipt = await result.wait();
     const url = "https://bscscan.com/tx/" + result.hash;
 
     // get the total balance currently locked in the vault
-    const b = await connection.contract.participantBalance(wallet.address);
-    const balance = ethers.utils.formatEther(b);
+    const b = await connection.contract.user(wallet.address);
+    const balance = ethers.utils.formatEther(b.totalInvested);
+    const claimed = ethers.utils.formatEther(b.totalRedeemed);
 
     // succeeded
     if (receipt) {
       const b = await connection.provider.getBalance(wallet.address);
       console.log(`Wallet${wallet["index"]}: success`);
-      console.log(`Vault Balance: ${balance} FUR`);
+      console.log(`Vault Balance: ${balance} CLIMB`);
       const bal = ethers.utils.formatEther(b);
 
       const success = {
@@ -219,7 +207,7 @@ const claim = async (wallet, tries = 1.0) => {
         wallet: w,
         BNB: bal,
         balance: balance,
-        claimToPool: true,
+        claimed: claimed,
         tries: tries,
         url: url,
       };
@@ -254,23 +242,11 @@ const compound = async (wallet, tries = 1.0) => {
     // connection using the current wallet
     const connection = await connect(wallet);
     const mask = wallet.address.slice(0, 5) + "..." + wallet.address.slice(-6);
-    const nonce = await connection.provider.getTransactionCount(wallet.address);
-
-    // set custom gasPrice
-    const overrideOptions = {
-      nonce: nonce,
-      gasLimit: 999999,
-      gasPrice: ethers.utils.parseUnits(tries.toString(), "gwei"),
-    };
-    const m = Math.floor((120 * 60000) / tries);
+    const ref = wallet.referer;
 
     // call the compound function and await the results
-    const result = await connection.contract.compound(overrideOptions);
-    const receipt = await connection.provider.waitForTransaction(
-      result.hash,
-      1,
-      m
-    );
+    const result = await connection.contract.reinvestInMatrix(ref);
+    const receipt = await result.wait();
     const url = "https://bscscan.com/tx/" + result.hash;
 
     // get the total balance currently locked in the vault
