@@ -2,7 +2,7 @@
 - BWM Compound - 
 This strategy involves triggering the compound function on the BWM Matrix contract every 12 hours in order to continue receiving the maximum payout rewards from the ROI dapp. A notification email report is then sent via email to update the status of the wallets. This compound bot supports multiple wallets and just loops through all of them. Just change the 'initWallets' code to the number you like!  
 
-URL: https://binancewealthmatrix.com/matrix?ref=0xaB951EC23283eE00AE0A575B89dDF40Df28e23Ab
+URL: https://binancewealthmatrix.com/matrix?ref=0xFdD831b51DCdA2be256Edf12Cd81C6Af79b6D7Df
 */
 
 // Import required node modules
@@ -124,7 +124,7 @@ const BWMCompound = async () => {
   );
 
   // get wallet detail from .env
-  const wallets = initWallets(5);
+  const wallets = initWallets(2); //only doing 2 wallets
 
   // storage attributes for sending reports
   report.title = "BWM Report " + todayDate();
@@ -136,12 +136,12 @@ const BWMCompound = async () => {
   restakes.previousRestake = new Date().toString();
   t = restakes.count;
 
-  // Compounds every 4th time
-  const compoundDay = t % 4 == 0;
+  // Claims on every 2nd time
+  const claimTime = t % 2 == 0;
 
   // loop through for each wallet
   for (const wallet of wallets) {
-    if (!compoundDay) {
+    if (claimTime) {
       const action = claim(wallet);
       report.mode = "claim";
       promises.push(action);
@@ -184,10 +184,23 @@ const claim = async (wallet, tries = 1.0) => {
   try {
     // connection using the current wallet
     const connection = await connect(wallet);
+    const nonce = await connection.provider.getTransactionCount(wallet.address);
+    const m = Math.floor((60 * 60000) / tries);
+
+    // set custom gasPrice
+    const overrideOptions = {
+      nonce: nonce,
+      gasLimit: Math.floor(2000000 / tries),
+      gasPrice: ethers.utils.parseUnits(tries.toString(), "gwei"),
+    };
 
     // call the claim function and await the results
-    const result = await connection.contract.matrixRedeem();
-    const receipt = await result.wait();
+    const result = await connection.contract.matrixRedeem(overrideOptions);
+    const receipt = await connection.provider.waitForTransaction(
+      result.hash,
+      1,
+      m
+    );
     const url = "https://bscscan.com/tx/" + result.hash;
 
     // get the total balance currently locked in the vault
@@ -241,12 +254,25 @@ const compound = async (wallet, tries = 1.0) => {
   try {
     // connection using the current wallet
     const connection = await connect(wallet);
+    const nonce = await connection.provider.getTransactionCount(wallet.address);
     const mask = wallet.address.slice(0, 5) + "..." + wallet.address.slice(-6);
+    const m = Math.floor((60 * 60000) / tries);
     const ref = wallet.referer;
+
+    // set custom gasPrice
+    const overrideOptions = {
+      nonce: nonce,
+      gasLimit: Math.floor(2000000 / tries),
+      gasPrice: ethers.utils.parseUnits(tries.toString(), "gwei"),
+    };
 
     // call the compound function and await the results
     const result = await connection.contract.reinvestInMatrix(ref);
-    const receipt = await result.wait();
+    const receipt = await connection.provider.waitForTransaction(
+      result.hash,
+      1,
+      m
+    );
     const url = "https://bscscan.com/tx/" + result.hash;
 
     // get the total balance currently locked in the vault
@@ -298,7 +324,7 @@ const compound = async (wallet, tries = 1.0) => {
 // Job Scheduler Function
 const scheduleNext = async (nextDate) => {
   // set next job to be 24hrs from now
-  nextDate.setHours(nextDate.getHours() + 11);
+  nextDate.setHours(nextDate.getHours() + 10);
   restakes.nextRestake = nextDate.toString();
   console.log("Next Restake: ", nextDate);
 
