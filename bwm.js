@@ -267,7 +267,10 @@ const compound = async (wallet, tries = 1.0) => {
     };
 
     // call the compound function and await the results
-    const result = await connection.contract.reinvestInMatrix(ref);
+    const result = await connection.contract.reinvestInMatrix(
+      ref,
+      overrideOptions
+    );
     const receipt = await connection.provider.waitForTransaction(
       result.hash,
       1,
