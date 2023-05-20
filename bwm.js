@@ -1,6 +1,6 @@
 /*
 - BWM Compound - 
-This strategy involves triggering the compound function on the BWM Matrix contract every 12 hours in order to continue receiving the maximum payout rewards from the ROI dapp. A notification email report is then sent via email to update the status of the wallets. This compound bot supports multiple wallets and just loops through all of them. Just change the 'initWallets' code to the number you like!  
+This strategy involves triggering the compound function on the BWM Matrix contract every 10 hours in order to continue receiving the maximum payout rewards from the ROI dapp. A notification email report is then sent via email to update the status of the wallets. This compound bot supports multiple wallets and just loops through all of them. Just change the 'initWallets' code to the number you like!  
 
 URL: https://binancewealthmatrix.com/matrix?ref=0xFdD831b51DCdA2be256Edf12Cd81C6Af79b6D7Df
 */
@@ -44,10 +44,12 @@ const main = async () => {
 
     // get stored values from file
     const storedData = JSON.parse(fs.readFileSync("./restakes.json"));
+    console.log(storedData);
 
     // not first launch, check data
     if ("nextRestake" in storedData) {
       const nextRestake = new Date(storedData.nextRestake);
+      restakes["count"] = new Number(storedData["count"]);
 
       // restore claims schedule
       if (nextRestake > new Date()) {
@@ -59,8 +61,6 @@ const main = async () => {
   } catch (error) {
     console.error(error);
   }
-
-  //  CHANGE THIS ONE
 
   // first time, no previous launch
   if (!restakeExists) BWMCompound();
@@ -134,7 +134,8 @@ const BWMCompound = async () => {
 
   // store last compound
   restakes.previousRestake = new Date().toString();
-  t = restakes.count;
+  const t = restakes["count"];
+  restakes["count"] = t + 1;
 
   // Claims on every 2nd time
   const claimTime = t % 2 == 0;
@@ -171,8 +172,7 @@ const BWMCompound = async () => {
   const average = eval(balances.join("+")) / balances.length;
   report.consolidated = { average: average };
 
-  // report status
-  restakes.count += 1;
+  // report action status
   scheduleNext(new Date());
   report.schedule = restakes;
   sendReport();
