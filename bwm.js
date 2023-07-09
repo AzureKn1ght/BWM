@@ -137,12 +137,12 @@ const BWMCompound = async () => {
   const t = restakes["count"];
   restakes["count"] = t + 1;
 
-  // Claims on every 2nd time
-  const claimTime = t % 2 == 0;
+  // Compound on every 4th time
+  const compundTime = t % 4 == 0;
 
   // loop through for each wallet
   for (const wallet of wallets) {
-    if (claimTime) {
+    if (compundTime) {
       const action = claim(wallet);
       report.mode = "claim";
       promises.push(action);
@@ -327,7 +327,7 @@ const compound = async (wallet, tries = 1.0) => {
 // Job Scheduler Function
 const scheduleNext = async (nextDate) => {
   // set next job to be 24hrs from now
-  nextDate.setHours(nextDate.getHours() + 6);
+  nextDate.setHours(nextDate.getHours() + 8);
   restakes.nextRestake = nextDate.toString();
   console.log("Next Restake: ", nextDate);
 
