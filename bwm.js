@@ -142,7 +142,7 @@ const BWMCompound = async () => {
 
   // loop through for each wallet
   for (const wallet of wallets) {
-    if (compundTime) {
+    if (!compundTime) {
       const action = claim(wallet);
       report.mode = "claim";
       promises.push(action);
