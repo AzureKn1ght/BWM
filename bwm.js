@@ -327,7 +327,7 @@ const compound = async (wallet, tries = 1.0) => {
 // Job Scheduler Function
 const scheduleNext = async (nextDate) => {
   // set next job to be 24hrs from now
-  nextDate.setHours(nextDate.getHours() + 8);
+  nextDate.setHours(nextDate.getHours() + 12);
   restakes.nextRestake = nextDate.toString();
   console.log("Next Restake: ", nextDate);
 
