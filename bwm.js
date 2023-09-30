@@ -137,8 +137,8 @@ const BWMCompound = async () => {
   const t = restakes["count"];
   restakes["count"] = t + 1;
 
-  // Compound on every 4th time
-  const compundTime = t % 4 == 0;
+  // Compound on every 3rd time
+  const compundTime = t % 3 == 0;
 
   // loop through for each wallet
   for (const wallet of wallets) {
@@ -196,11 +196,6 @@ const claim = async (wallet, tries = 1.0) => {
 
     // call the claim function and await the results
     const result = await connection.contract.matrixRedeem(overrideOptions);
-    const receipt = await connection.provider.waitForTransaction(
-      result.hash,
-      1,
-      m
-    );
     const url = "https://bscscan.com/tx/" + result.hash;
 
     // get the total balance currently locked in the vault
@@ -208,25 +203,23 @@ const claim = async (wallet, tries = 1.0) => {
     const balance = ethers.utils.formatEther(b.totalInvested);
     const claimed = ethers.utils.formatEther(b.totalRedeemed);
 
-    // succeeded
-    if (receipt) {
-      const b = await connection.provider.getBalance(wallet.address);
-      console.log(`Wallet${wallet["index"]}: success`);
-      console.log(`Vault Balance: ${balance} CLIMB`);
-      const bal = ethers.utils.formatEther(b);
+    // we are no longer waiting for transaction confirmation
+    const c = await connection.provider.getBalance(wallet.address);
+    console.log(`Wallet${wallet["index"]}: success`);
+    console.log(`Vault Balance: ${balance} CLIMB`);
+    const bal = ethers.utils.formatEther(c);
 
-      const success = {
-        index: wallet.index,
-        wallet: w,
-        BNB: bal,
-        balance: balance,
-        claimed: claimed,
-        tries: tries,
-        url: url,
-      };
+    const success = {
+      index: wallet.index,
+      wallet: w,
+      BNB: bal,
+      balance: balance,
+      claimed: claimed,
+      tries: tries,
+      url: url,
+    };
 
-      return success;
-    }
+    return success;
   } catch (error) {
     console.log(`Wallet${wallet["index"]}: failed!`);
     console.error(error);
@@ -271,36 +264,29 @@ const compound = async (wallet, tries = 1.0) => {
       ref,
       overrideOptions
     );
-    const receipt = await connection.provider.waitForTransaction(
-      result.hash,
-      1,
-      m
-    );
     const url = "https://bscscan.com/tx/" + result.hash;
 
     // get the total balance currently locked in the vault
     const b = await connection.contract.user(wallet.address);
     const balance = ethers.utils.formatEther(b.totalInvested);
 
-    // succeeded
-    if (receipt) {
-      const b = await connection.provider.getBalance(wallet.address);
-      console.log(`Wallet${wallet["index"]}: success`);
-      console.log(`Vault Balance: ${balance} CLIMB`);
-      const bal = ethers.utils.formatEther(b);
+    // we are no longer waiting for transaction confirmation
+    const c = await connection.provider.getBalance(wallet.address);
+    console.log(`Wallet${wallet["index"]}: success`);
+    console.log(`Vault Balance: ${balance} CLIMB`);
+    const bal = ethers.utils.formatEther(c);
 
-      const success = {
-        index: wallet.index,
-        wallet: mask,
-        BNB: bal,
-        balance: balance,
-        compound: true,
-        tries: tries,
-        url: url,
-      };
+    const success = {
+      index: wallet.index,
+      wallet: mask,
+      BNB: bal,
+      balance: balance,
+      compound: "sent",
+      tries: tries,
+      url: url,
+    };
 
-      return success;
-    }
+    return success;
   } catch (error) {
     console.log(`Wallet${wallet["index"]}: failed!`);
     console.error(error);
