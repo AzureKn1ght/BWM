@@ -137,8 +137,8 @@ const BWMCompound = async () => {
   const t = restakes["count"];
   restakes["count"] = t + 1;
 
-  // Compound on every 3rd time
-  const compundTime = t % 3 == 0;
+  // Compound on every 2nd time
+  const compundTime = t % 2 == 0;
 
   // loop through for each wallet
   for (const wallet of wallets) {
@@ -224,8 +224,8 @@ const claim = async (wallet, tries = 1.0) => {
     console.log(`Wallet${wallet["index"]}: failed!`);
     console.error(error);
 
-    // max 5 tries
-    if (tries > 5) {
+    // max 3 tries
+    if (tries > 3) {
       // failed
       const failure = {
         index: wallet.index,
@@ -235,6 +235,7 @@ const claim = async (wallet, tries = 1.0) => {
 
       return failure;
     }
+    await delay();
 
     // failed, retrying again...
     console.log(`retrying(${tries})...`);
@@ -291,8 +292,8 @@ const compound = async (wallet, tries = 1.0) => {
     console.log(`Wallet${wallet["index"]}: failed!`);
     console.error(error);
 
-    // max 5 tries
-    if (tries > 5) {
+    // max 3 tries
+    if (tries > 3) {
       // failed
       const w = wallet.address.slice(0, 5) + "..." + wallet.address.slice(-6);
       const failure = {
@@ -303,6 +304,7 @@ const compound = async (wallet, tries = 1.0) => {
 
       return failure;
     }
+    await delay();
 
     // failed, retrying again...
     console.log(`retrying(${tries})...`);
@@ -409,6 +411,13 @@ const sendReport = async () => {
   } catch (error) {
     console.error(error);
   }
+};
+
+// Random Time Delay Function
+const delay = () => {
+  const ms = getRandomNum(50833, 81839);
+  console.log(`delay(${ms})`);
+  return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 main();
